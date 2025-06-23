@@ -46,6 +46,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Generar portada de Rick and Morty para app en index.html
+  const appDiv = document.getElementById('app');
+  if (appDiv) {
+    appDiv.innerHTML = `
+      <img src="https://rickandmortyapi.com/icons/icon-512x512.png" alt="Rick and Morty Logo" class="cover-logo" />
+      <h1 class="cover-title">Rick and Morty Web App</h1>
+      <p class="cover-desc">
+        Explora personajes, ubicaciones y episodios del multiverso de <strong>Rick and Morty</strong>.<br>
+        ¡Haz clic en el menú para comenzar tu aventura!
+      </p>
+      <div class="cover-team-box">
+        <h3 class="cover-subtitle">👨‍💻 Miembros del equipo</h3>
+        <ul class="cover-team">
+          <li>Manuel Astul Laínez</li>
+          <li>Daniel Alejandro Carrillo</li>
+          <li>Heber Francisco Fuentes</li>
+        </ul>
+      </div>
+    `;
+    appDiv.classList.add('cover');
+  }
+
   // Mostrar locations si existe el contenedor
   function getLocations(page = 1) {
     const locationContainer = document.getElementById('location-list');
