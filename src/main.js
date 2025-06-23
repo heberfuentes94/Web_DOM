@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 class="cover-subtitle">👨‍💻 Miembros del equipo</h3>
         <ul class="cover-team">
           <li>Manuel Astul Laínez</li>
-          <li>Daniel Alejandro Carrillo</li>
+          <li>Jose Daniel Cartagena Ascencio</li>
           <li>Heber Francisco Fuentes</li>
         </ul>
       </div>
@@ -173,3 +173,108 @@ document.addEventListener('DOMContentLoaded', function() {
     getLocations();
   }
 });
+
+// DANIEL//
+// Mostrar personajes si existe el contenedor
+let currentCharacterPage = 1; // Lleva el control de la página actual
+
+function getCharacters(page = 1) {
+  const container = document.getElementById('character-list');
+  if (!container) return;
+
+  if (page === 1) container.innerHTML = '<p>Cargando personajes...</p>';
+
+  fetch(`https://rickandmortyapi.com/api/character?page=${page}`)
+    .then(res => res.json())
+    .then(data => {
+      if (page === 1) container.innerHTML = '';
+
+      data.results.forEach(char => {
+        const card = document.createElement('div');
+        card.classList.add('character-card');
+        card.innerHTML = `
+          <h3>${char.name}</h3>
+          <img src="${char.image}" alt="${char.name}" style="width: 100%; border-radius: 8px; margin-bottom: 0.7rem;" />
+          <p><strong>Especie:</strong> ${char.species}</p>
+          <p><strong>Estado:</strong> ${char.status}</p>
+          <p><strong>Género:</strong> ${char.gender}</p>
+          <button class="ver-mas-btn">Ver más</button>
+        `;
+
+        card.querySelector('.ver-mas-btn').addEventListener('click', () => {
+          showCharacterModal(char);
+        });
+
+        container.appendChild(card);
+      });
+
+      // Agregar o actualizar el botón "Cargar más"
+      let loadMoreBtn = document.getElementById('load-more-btn');
+      if (!loadMoreBtn && data.info.next) {
+        loadMoreBtn = document.createElement('button');
+        loadMoreBtn.id = 'load-more-btn';
+        loadMoreBtn.textContent = 'Cargar más';
+        loadMoreBtn.style.margin = '2rem auto';
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.style.padding = '0.7rem 1.4rem';
+        loadMoreBtn.style.borderRadius = '8px';
+        loadMoreBtn.style.border = 'none';
+        loadMoreBtn.style.background = 'var(--marron)';
+        loadMoreBtn.style.color = '#fff';
+        loadMoreBtn.style.fontWeight = 'bold';
+        loadMoreBtn.style.cursor = 'pointer';
+
+        loadMoreBtn.addEventListener('click', () => {
+          currentCharacterPage++;
+          getCharacters(currentCharacterPage);
+        });
+
+        container.parentNode.appendChild(loadMoreBtn);
+      } else if (!data.info.next && loadMoreBtn) {
+        loadMoreBtn.remove(); // Si ya no hay más páginas, lo quitamos
+      }
+
+    })
+    .catch(() => {
+      container.innerHTML += '<p>Error al cargar más personajes.</p>';
+    });
+}
+
+// Función modal para mostrar detalles del personaje
+function showCharacterModal(char) {
+  let modal = document.getElementById('modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="modal-body"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.querySelector('.modal-content .close-modal').onclick = () => modal.style.display = 'none';
+  modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+
+  const content = `
+    <div style="text-align: center;">
+      <img src="${char.image}" alt="${char.name}" style="width: 100px; border-radius: 50%; margin-bottom: 1rem;" />
+      <h3>${char.name}</h3>
+      <p><strong>Especie:</strong> ${char.species}</p>
+      <p><strong>Estado:</strong> ${char.status}</p>
+      <p><strong>Género:</strong> ${char.gender}</p>
+      <p><strong>Origen:</strong> ${char.origin.name}</p>
+      <p><strong>Ubicación actual:</strong> ${char.location.name}</p>
+    </div>
+  `;
+
+  modal.querySelector('#modal-body').innerHTML = content;
+  modal.style.display = 'block';
+}
+// Llama a la función si estás en la página de characters
+if (document.getElementById('character-list')) {
+  getCharacters();
+} 
+
