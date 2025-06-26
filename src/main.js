@@ -148,26 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  // Modal simple para mostrar residentes
-  function showModal(content) {
-    let modal = document.getElementById('modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <span class="close-modal" style="cursor:pointer;font-size:2rem;float:right;">&times;</span>
-          <div id="modal-body"></div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector('.close-modal').onclick = () => modal.style.display = 'none';
-      modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
-    }
-    modal.querySelector('#modal-body').innerHTML = content;
-    modal.style.display = 'block';
-  }
-
   // Llama a la función si estás en la página de locations
   if (document.getElementById('location-list')) {
     getLocations();
@@ -276,5 +256,110 @@ function showCharacterModal(char) {
 // Llama a la función si estás en la página de characters
 if (document.getElementById('character-list')) {
   getCharacters();
-} 
+}
+
+// Mostrar episodios si existe el contenedor
+function getEpisodes(page = 1) {
+  const episodeContainer = document.getElementById('episode-list');
+  if (!episodeContainer) return;
+
+  episodeContainer.innerHTML = '<p>Cargando episodios...</p>';
+
+  fetch(`https://rickandmortyapi.com/api/episode?page=${page}`)
+    .then(res => res.json())
+    .then(data => {
+      episodeContainer.innerHTML = '';
+      data.results.forEach(episode => {
+        const card = document.createElement('div');
+        card.classList.add('episode-card');
+        card.innerHTML = `
+          <h3>🎬 ${episode.name}</h3>
+          <p><strong>Código:</strong> ${episode.episode}</p>
+          <p><strong>Fecha de emisión:</strong> ${episode.air_date}</p>
+          <p><strong>Personajes:</strong> ${episode.characters.length}</p>
+          <button class="show-characters-btn" data-characters='${JSON.stringify(episode.characters.slice(0, 5))}'>
+            Ver personajes
+          </button>
+        `;
+        episodeContainer.appendChild(card);
+      });
+
+      // Paginación
+      const pagination = document.createElement('div');
+      pagination.className = 'pagination';
+      if (data.info.prev) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = 'Anterior';
+        prevBtn.onclick = () => getEpisodes(page - 1);
+        pagination.appendChild(prevBtn);
+      }
+      if (data.info.next) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Siguiente';
+        nextBtn.onclick = () => getEpisodes(page + 1);
+        pagination.appendChild(nextBtn);
+      }
+      episodeContainer.appendChild(pagination);
+
+      // Evento para mostrar personajes
+      episodeContainer.querySelectorAll('.show-characters-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const urls = JSON.parse(this.dataset.characters);
+          if (urls.length === 0) {
+            showModal('Sin personajes en este episodio.');
+            return;
+          }
+          // Obtener IDs de los personajes
+          const ids = urls.map(url => url.split('/').pop()).join(',');
+          const res = await fetch(`https://rickandmortyapi.com/api/character/${ids}`);
+          const chars = await res.json();
+          let charactersHtml = '';
+          if (Array.isArray(chars)) {
+            charactersHtml = chars.map(c => `
+              <div class="resident-card">
+                <img src="${c.image}" alt="${c.name}" />
+                <span>${c.name}</span>
+              </div>
+            `).join('');
+          } else {
+            charactersHtml = `
+              <div class="resident-card">
+                <img src="${chars.image}" alt="${chars.name}" />
+                <span>${chars.name}</span>
+              </div>
+            `;
+          }
+          showModal(charactersHtml);
+        });
+      });
+    })
+    .catch(() => {
+      episodeContainer.innerHTML = '<p>Error al cargar episodios.</p>';
+    });
+}
+
+// Llama a la función si estás en la página de episodes
+if (document.getElementById('episode-list')) {
+  getEpisodes();
+}
+
+// --- Mueve esta función al inicio del archivo, fuera de cualquier función ---
+function showModal(content) {
+  let modal = document.getElementById('modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <span class="close-modal" style="cursor:pointer;font-size:2rem;float:right;">&times;</span>
+        <div id="modal-body"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.close-modal').onclick = () => modal.style.display = 'none';
+    modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+  }
+  modal.querySelector('#modal-body').innerHTML = content;
+  modal.style.display = 'block';
+}
 
